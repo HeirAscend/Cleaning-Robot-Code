@@ -88,14 +88,14 @@ void sweepEdge(int edges, int tapeColour)
 	}
 }
 
-task main()
+void startup(int *tapeColour, int *edges, float *duration)
 {
 	displayString("Epic cool robot time.", 10);
 	wait1Msec(5000);
 
 	eraseDisplay();
 
-	int tapecolour = (int)colorRed;
+	tapecolour = (int)colorRed;
 
 	while(true)
 	{
@@ -133,7 +133,7 @@ task main()
 
 	wait1Msec(100);
 	displayString("Enter number of edges in the room: (up to increment, down to decrement, enter to confirm) ", 10);
-	int edges = 4;
+	edges = 4;
 	while(!getButtonPress(buttonEnter))
 	{
 		eraseDisplay();
@@ -167,7 +167,7 @@ task main()
 	wait1Msec(100);
 	displayString("Enter Duration of Cleaning: (Up for increment of 1 minute, down for decrement, enter to confirm)", 10);
 
-	float duration = 0.0;
+	duration = 0.0;
 	while(!getButtonPress(buttonEnter))
 	{
 		eraseDisplay();
@@ -207,6 +207,16 @@ task main()
 
 	while(getButtonPress(buttonEnter))
 	{}
+	
+	configureAllSensors();
+}
+
+task main()
+{
+	int tapeColour = (int)colorRed, edges = 4;
+	float duration = 1.0;
+	
+	startup(tapeColour, edges, duration);
 
 	sweepEdge(edges, tapeColour);
 }
