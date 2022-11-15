@@ -89,7 +89,7 @@ void sweepEdge(int edges, int tapeColour)
 		{}
 
 		drive(0);
-		driveDistance(-5);
+		driveDistance(-5, fwdSpeed);
 		
 		// case if inside wall corner
 		if(SensorValue[sidetouch] == 1 && SensorValue[frontTouch] == 1)
