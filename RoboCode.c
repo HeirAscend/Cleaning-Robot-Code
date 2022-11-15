@@ -1,9 +1,24 @@
+/*
+Varun Chauhan, Ryan Bernstein, Suyu Chen, Jerry Chen
+Version 1.0
+Assumptions: User will follow instructions given during startup, all corners in room are 90 degrees, tape boundaries are always straight lines, 
+	     obstacles allow for movement between
+
+Description: Main code for cleaning robot. On startup, user will be asked to set tape colour, number of edges, and duration. After that, robot will 
+	     clean the perimeter of the room based on inputted number of edges. After cleaning edges, robot will used a weighted random turn navigation
+	     algorithm to clean at least 90% of the room within 5 minutes.
+*/
+
+// variables for the motors
 tMotor motorLeft = motorA, motorRight = motorD, motorSpray, motorDrum;
 
-int fwdSpeed = 50, turnSpeed = 20;
+// variables for standard speeds for movement and turning
+const int fwdSpeed = 50, turnSpeed = 20;
 
-const float RADIUS = 2.75
+// variable for wheel radius
+const float RADIUS = 2.75;
 
+// configures all sensors
 void configureAllSensors()
 {
 	SensorType[S1] = sensorEV3_Touch;
@@ -21,25 +36,20 @@ void configureAllSensors()
 	wait1Msec(50);
 }
 
-//Drive robot at specified power/direction
+// drive robot at specified power/direction
 void drive(int mPower)
 {
 	motor[motorLeft] = motor[motorD] = mPower;
 }
 
-//Drive robot a specified distance
-void driveDistance(int distance, int mPower) //drives robot straight for given distance based on motor encoders and nominal wheel diameter. Positive distance is forward
+// drive robot a specified distance
+void driveDistance(int distance, int mPower)
 {
 	nMotorEncoder[motorLeft]=0;
 	const float CM_TO_DEG = 180/(RADIUS*PI);
-	if (distance>0)
-	{
-		drive(mPower);
-	}
-	else
-	{
-		drive(-1 * mPower);
-	}
+	
+	if (distance>0)	drive(mPower);
+	else	drive(-1 * mPower);
 
 	while (abs(nMotorEncoder[motorLeft])<abs(distance*CM_TO_DEG))
 	{}
@@ -47,7 +57,7 @@ void driveDistance(int distance, int mPower) //drives robot straight for given d
 	drive(0);
 }
 
-//Rotate robot a specified angle
+// rotate robot a specified angle
 void rotateRobot(int angle, int mPower)
 {
 	resetGyro(S4);
@@ -69,44 +79,47 @@ void rotateRobot(int angle, int mPower)
 	drive(0);
 }
 
-//Drives robot along an edge and rotates once a corner is detected
+// drives robot along an edge and rotates once a corner is detected
 void sweepEdge(int edges, int tapeColour)
 {
 	for(int counter = 0; counter < edges; counter++)
 	{
-		drive(fwdSpeed);//Drives forward while side touch sensor activated, and front touch sensor not activated or colour sensor detects tape border
+		drive(fwdSpeed);// drives forward until is detect a corner (of any kind)
 		while((SensorValue[sidetouch] == 1 && SensorValue[frontTouch] != 1) || SensorValue[colorSensor] == tapeColour)
 		{}
 
 		drive(0);
 		driveDistance(-5);
-
-		if(SensorValue[sidetouch] == 1 && SensorValue[frontTouch] == 1)//If both side and front touch sensors activated, rotate 90 degrees counterclockwise
-		{
+		
+		// case if inside wall corner
+		if(SensorValue[sidetouch] == 1 && SensorValue[frontTouch] == 1)
 			rotateRobot(-90);
-		}
-		else if(SensorValue[sidetouch] == 0 && SensorValue[frontTouch] == 0)//If both side and front touch sensores not activated, rotate 90 degrees clockwise
-		{
+		
+		// case if outside wall corner
+		else if(SensorValue[sidetouch] == 0 && SensorValue[frontTouch] == 0)
 			rotateRobot(90);
-		}
 	}
 }
 
-//Start up sequence and user input
+// startup sequence
 void startup(int *tapeColour, int *edges, float *duration)
 {
-	displayString("Epic cool robot time.", 10);
+	// inital text
+	displayString("It's roboting time.", 10);
 	wait1Msec(5000);
 
 	eraseDisplay();
+	
+	// initialize value to tapeColour
+	tapeColour = (int)colorRed;
 
-	tapecolour = (int)colorRed;
-
-	while(true)//Detects colour of tape border and sets that as the border colour
+	// keeps running until user is satisfied with colour
+	while(true)
 	{
 		displayString("Place Robot on coloured tape for at least 5 seconds: ", 10);
 		wait1Msec(100);
 
+		// runs until colour sensor detects same colour for 2 seconds (to avoid detecting random colours in set up)
 		while(true)
 		{
 			tapeColour = getColorName(colourSensor);
@@ -117,11 +130,13 @@ void startup(int *tapeColour, int *edges, float *duration)
 
 		displayString("Color Chosen! Accept or retry? (up for accept, down for retry)", 15);
 
+		// runs until either up or down is pressed
 		while(!getButtonPress(buttonUp) || !getButtonPress(buttonDown)
 		{}
 
 		eraseDisplay();
 
+		// breaks loop if up is pressed
 		if(getButtonPress(buttonUp)
 		{
 			while(getButtonPress(buttonUp))
@@ -129,6 +144,8 @@ void startup(int *tapeColour, int *edges, float *duration)
 
 			break;
 		}
+		
+		// continues running if down is pressed
 		else
 		{
 			while(getButtonPress(buttonDown)
@@ -137,24 +154,32 @@ void startup(int *tapeColour, int *edges, float *duration)
 	}
 
 	wait1Msec(100);
-	displayString("Enter number of edges in the room: (up to increment, down to decrement, enter to confirm) ", 10);
 	edges = 4;
-	while(!getButtonPress(buttonEnter))//User inputs number of edges of the area to clean
+	
+	// waits until enter is pressed
+	while(!getButtonPress(buttonEnter))
 	{
+		// displays message and number of edges
 		eraseDisplay();
+		displayString("Enter number of edges in the room: (up to increment, down to decrement, enter to confirm) ", 10);
 		displayString("Number of edges: %d", edges, 15);
 
-		while(!getButtonPress(buttonUp) || !getButtonPress(buttonDown)
+		// waits until either button is pressed
+		while(!getButtonPress(buttonUp) || !getButtonPress(buttonDown) || !getButtonPress(buttonEnter))
 		{}
 
-		if(edges > 0)
+		// minimum edges can be 4
+		if(edges > 3)
 		{
-			if(getButtonPress(buttonUp)
+			// increment if up is pressed
+			if(getButtonPress(buttonUp))
 			{
 				while(getButtonPress(buttonUp))
 				{}
 				edges++;
 			}
+			   
+			// decrement if down is pressed
 			else
 			{
 				while(getButtonPress(buttonDown))
@@ -170,25 +195,32 @@ void startup(int *tapeColour, int *edges, float *duration)
 	eraseDisplay();
 
 	wait1Msec(100);
-	displayString("Enter Duration of Cleaning: (Up for increment of 1 minute, down for decrement, enter to confirm)", 10);
-
 	duration = 0.0;
-	while(!getButtonPress(buttonEnter))//User inputs duration for robot to clean
+			   
+	// waits until enter is pressed
+	while(!getButtonPress(buttonEnter))
 	{
+		// displays message and duration
 		eraseDisplay();
+		displayString("Enter Duration of Cleaning: (Up for increment of 1 minute, down for decrement, enter to confirm)", 10);
 		displayString("Duration: %f", duration, 15);
 
-		while(!getButtonPress(buttonUp) || !getButtonPress(buttonDown)
+		// waits until either button is pressed
+		while(!getButtonPress(buttonUp) || !getButtonPress(buttonDown) || !getButtonPress(buttonEnter))
 		{}
-
+		
+		// duration can't be negative
 		if(duration > 0)
 		{
-			if(getButtonPress(buttonUp)
+			// increments if up is pressed
+			if(getButtonPress(buttonUp))
 			{
 				while(getButtonPress(buttonUp))
 				{}
 				duration++;
 			}
+			
+			// decrements if down is pressed
 			else
 			{
 				while(getButtonPress(buttonDown))
@@ -203,6 +235,7 @@ void startup(int *tapeColour, int *edges, float *duration)
 
 	eraseDisplay();
 
+	// final message in startup
 	wait1Msec(100);
 	displayString("All configured! Place Robot at starting position and press enter to start.", 10);//Waits for enter button to be pressed then begins cleaning
 
@@ -216,18 +249,23 @@ void startup(int *tapeColour, int *edges, float *duration)
 	configureAllSensors();
 }
 
+// main method
 task main()
 {
+	// initializes variables
 	int tapeColour = (int)colorRed, edges = 4;
 	float duration = 1.0;
 
+	// runs startup
 	startup(tapeColour, edges, duration);
 
+	// runs sweepEdge
 	sweepEdge(edges, tapeColour);
 
-	if(SensorValue[frontTouch] == 1)//random thing, maybe?
+	// navigation algorithm (work in progress)
+	if(SensorValue[frontTouch] == 1)
 	{
 		driveDistance(-5);
-		rotateRobot(random(180)+90, 20);
+		rotateRobot(90 + random(180), turnSpeed);
 	}
 }
