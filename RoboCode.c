@@ -33,7 +33,12 @@ const float RADIUS = 4;
 void configureAllSensors()
 {
 	SensorType[sbTouch] = sensorEV3_Touch;
-	SensorType[gyro] = sensorEV3_Ultrasonic;
+	SensorType[gyro] = sensorEV3_Gyro;
+	wait1Msec(50);
+	SensorMode[S4] = modeEV3Gyro_Calibration;
+	wait1Msec(100);
+	SensorMode[S4] = modeEV3Gyro_RateAndAngle;
+	wait1Msec(50);
 	SensorType[color] = sensorEV3_Color;
 	wait1Msec(50);
 	SensorMode[color] = modeEV3Color_Color;
@@ -82,14 +87,14 @@ void rotateRobot(int angle)
 
 	if (angle>0)
 	{
-		motor[motorLeft] = turnSpeed;
-		motor[motorRight] = -1 * turnSpeed;
+		motor[motorLeft] = -turnSpeed;
+		motor[motorRight] = turnSpeed;
 	}
 	else
 	{
 		displayString(11,"bob");
-		motor[motorRight] = turnSpeed;
-		motor[motorLeft] = -1 * turnSpeed;
+		motor[motorRight] = -turnSpeed;
+		motor[motorLeft] = turnSpeed;
 	}
 
 	while (abs(getGyroDegrees(S2))<abs(angle))
@@ -139,7 +144,7 @@ void sweepEdge(int edges, int tapeColour)
 		}
 
 		drive(0);
-		driveDistance(-50, fwdSpeed);
+		driveDistance(2, fwdSpeed);
 		
 		displayString(1,"w2w %d", w2w);
 			displayString(3,"n2n %d", n2n);
