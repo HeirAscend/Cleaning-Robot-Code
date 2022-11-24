@@ -13,7 +13,7 @@ Description: Main code for cleaning robot. On startup, user will be asked to set
 // variables for the motors
 tMotor motorLeft = motorA, motorRight = motorD, motorSpray = motorC, motorDrum = motorB;
 
-#define sbTouch S1
+#define ultrasonic S1
 #define gyro S2
 #define color S3
 #define mplexer S4
@@ -34,7 +34,8 @@ float duration = 1.0;
  */
 void configureAllSensors()
 {
-	SensorType[sbTouch] = sensorEV3_Touch;
+	SensorType[ultrasonic] = sensorEV3_Ultrasonic;
+	wait1Msec(100);
 	SensorType[gyro] = sensorEV3_Gyro;
 	wait1Msec(100);
 	SensorMode[gyro] = modeEV3Gyro_Calibration;
@@ -265,36 +266,20 @@ void startup()
  */
 void sweepEdge(int edges, int tapeColour)
 {
+	const int ULTRASONIC_WALL_DIST = 10;
 	bool alongTape = false;
-
-	bool w2w = false;
-	bool n2n = false;
-	bool w2t = false;
-	bool t2w = false;
-
-	bool fTouch = readMuxSensor(flTouch) == 1 && readMuxSensor(frTouch) == 1;
-	bool sTouch = SensorValue[sbTouch] == 1 && readMuxSensor(sfTouch) == 1;
-	bool colorDet = SensorValue[color] == tapeColour;
+	bool fTouch = false;
+	bool colorDet = false;
 
 	for (int counter = 0; counter < edges; counter++)
 	{
 		drive(fwdSpeed);
 
-		while (!w2w && !n2n && !w2t && !t2w)
+		while (!(readMuxSensor(flTouch)==1 || readMuxSensor(frTouch)==1 || SensorValue[ultrasonic] > ULTRASONIC_WALL_DIST))
 		{
-			fTouch = readMuxSensor(flTouch) == 1 && readMuxSensor(frTouch) == 1;
-			sTouch = SensorValue[sbTouch] == 1 && readMuxSensor(sfTouch) == 1;
+			fTouch = readMuxSensor(flTouch) == 1 || readMuxSensor(frTouch) == 1;
+			
 			colorDet = SensorValue[color] == tapeColour;
-
-			w2w = sTouch && fTouch && !colorDet;
-			w2t = sTouch && !fTouch && colorDet;
-			t2w = !sTouch && fTouch && colorDet;
-			n2n = !sTouch && !fTouch && !colorDet;
-
-			displayString(1, "w2w %d", w2w);
-			displayString(3, "n2n %d", n2n);
-			displayString(5, "w2t %d", w2t);
-			displayString(7, "t2w %d", t2w);
 
 			wait1Msec(50);
 			eraseDisplay();
