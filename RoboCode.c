@@ -21,7 +21,7 @@ tMotor motorLeft = motorA, motorRight = motorD, motorSpray = motorC, motorDrum =
 #define flTouch msensor_S4_2
 #define frTouch msensor_S4_3
 
-const int fwdSpeed = 50, turnSpeed = 20; // variables for standard speeds for movement and turning
+const int FWD_SPEED = 50, TURN_SPEED = 20; // variables for standard speeds for movement and turning
 const float RADIUS = 4;					  // variable for wheel radius
 
 int tapeColour = (int)colorWhite
@@ -104,13 +104,13 @@ void rotateRobot(int angle)
 
 	if (angle > 0)
 	{
-		motor[motorLeft] = turnSpeed;
-		motor[motorRight] = -1 * turnSpeed;
+		motor[motorLeft] = TURN_SPEED;
+		motor[motorRight] = -1 * TURN_SPEED;
 	}
 	else
 	{
-		motor[motorRight] = turnSpeed;
-		motor[motorLeft] = -1 * turnSpeed;
+		motor[motorRight] = TURN_SPEED;
+		motor[motorLeft] = -1 * TURN_SPEED;
 	}
 
 	while (abs(getGyroDegrees(gyro)) < abs(angle));
@@ -273,7 +273,7 @@ void sweepEdge(int edges, int tapeColour)
 
 	for (int counter = 0; counter < edges; counter++)
 	{
-		drive(fwdSpeed);
+		drive(FWD_SPEED);
 
 		while (!(readMuxSensor(flTouch)==1 || readMuxSensor(frTouch)==1 || SensorValue[ultrasonic] > ULTRASONIC_WALL_DIST))
 		{
@@ -286,7 +286,7 @@ void sweepEdge(int edges, int tapeColour)
 		}
 
 		drive(0);
-		driveDistance(50, fwdSpeed);
+		driveDistance(50, FWD_SPEED);
 
 		displayString(1, "w2w %d", w2w);
 		displayString(3, "n2n %d", n2n);
@@ -327,11 +327,11 @@ task main()
 	while (true)
 	{
 		displayString(7, "Cleaning ... ");
-		drive(fwdSpeed);
+		drive(FWD_SPEED);
 		if (readMuxSensor(flTouch) == 1 || readMuxSensor(frTouch) == 1 || SensorValue[color] == tapeColour)
 		{
 			drive(0);
-			drive(-fwdSpeed / 2);
+			drive(-FWD_SPEED / 2);
 			wait1Msec(2000);
 			rotateRobot(90 + rand() % 180);
 		}
