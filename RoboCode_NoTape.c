@@ -180,7 +180,6 @@ void startup()
 	wait1Msec(5000);
 
 	eraseDisplay();
-
 	edges = 4;
 
 	// waits until enter is pressed

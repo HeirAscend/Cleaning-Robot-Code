@@ -21,12 +21,20 @@ tMotor motorLeft = motorA, motorRight = motorD, motorSpray = motorC, motorDrum =
 #define flTouch msensor_S4_2
 #define frTouch msensor_S4_3
 
-const int FWD_SPEED = 50, TURN_SPEED = 20; // variables for standard speeds for movement and turning
+const int FWD_SPEED = 30, TURN_SPEED = 10; // variables for standard speeds for movement and turning
 const float RADIUS = 4;					  // variable for wheel radius
 
 int tapeColour = (int)colorWhite
 int edges = 4;
-double duration = 1.0;
+float duration = 1.0;
+
+// defines for playing sounds
+#define NOTE_C 554.37
+#define NOTE_D 587.33
+#define NOTE_E 659.25
+#define NOTE_F 739.99
+#define NOTE_G 783.99
+#define NOTE_A 880
 
 /**
  * @brief Configures all sensors
@@ -94,11 +102,12 @@ void driveDistance(int distance, int mPower)
 }
 
 /**
- * @brief Rotate robot a specified angle
+ * @brief Rotate robot with collision detection
  * 
- * @param angle angle to turn robot
+ * @param angle angle to turn
+ * @return true if turn completed, false if collision
  */
-void smartRotateRobot(int angle)
+bool smartRotateRobot(int angle)
 {
 	resetGyro(gyro);
 	motor[motorDrum] = 0;
@@ -114,8 +123,17 @@ void smartRotateRobot(int angle)
 		motor[motorLeft] = -1 * TURN_SPEED;
 	}
 
-	while (abs(getGyroDegrees(gyro)) < abs(angle));
+	while (abs(getGyroDegrees(gyro)) < abs(angle))
+	{
+		if (readMuxSensor(flTouch) == 1 || readMuxSensor(frTouch) == 1 ||
+			readMuxSensor(sfTouch) || SensorValue[color] == tapeColour)
+		{
+			drive(0);
+			return false;
+		}
+	}
 	drive(0);
+	return true;
 }
 
 /**
@@ -321,7 +339,7 @@ void sweepEdge(int edges, int tapeColour)
 				cornerType = 2;
 				displayString(11, "outside corner ");
 			}
-			else if(SensorValue[color] == 2 || SensorValue[color] == 3){
+			else if(SensorValue[color] == tapeColour){
 				cornerType = 3;
 				displayString(11, "tape corner    ");
 			}
@@ -359,6 +377,54 @@ void sweepEdge(int edges, int tapeColour)
 }
 
 /**
+ * @brief Randomly moves around room to clean room
+ * 
+ */
+void randomClean()
+{
+	bool rotationCollision = false;
+	while (time100[T1] < duration * 600)
+	{
+		displayString(7, "Cleaning ... ");
+		drive(FWD_SPEED);
+		if (readMuxSensor(flTouch) == 1 || readMuxSensor(frTouch) == 1 ||
+			readMuxSensor(sfTouch) || rotationCollision)
+		{
+			drive(0);
+			drive(-FWD_SPEED / 2);
+			wait1Msec(2000);
+			rotationCollision = !smartRotateRobot(90 + rand() % 180);
+		}
+		wait1Msec(100);
+	}
+}
+
+/**
+ * @brief Play end chime
+ * 
+ */
+void endChime()
+{
+	eraseDisplay();
+	displayString(7, "Roboting Complete");
+
+	int beatLength = 25;
+	int wait = 200;
+
+	const int NUM_NOTES = 20;
+	float music[NUM_NOTES] = {NOTE_G, NOTE_G, NOTE_G, NOTE_G, NOTE_G, NOTE_G, NOTE_A, NOTE_G, NOTE_G, NOTE_F, NOTE_F, NOTE_F, NOTE_F, NOTE_E, NOTE_E, NOTE_E, NOTE_E, NOTE_E, NOTE_D, NOTE_D};
+	int beatLengths[NUM_NOTES] = {1, 2, 1, 1, 2, 3, 2, 1, 3, 8, 1, 1, 2, 1, 8, 1, 1, 2, 1, 1};
+
+	for (int note = 0; note < NUM_NOTES; note++)
+	{
+		playTone(music[note], beatLength * beatLengths[note]);
+		wait1Msec(wait);
+	}
+
+	sleep(10000);
+}
+
+/**
  * @brief Main program
  * 
  */
@@ -372,22 +438,11 @@ task main()
 
 	time100[T1] = 0;
 
-	// runs sweepEdge
 	sweepEdge(edges, tapeColour);
+	randomClean();
 
-	// navigation algorithm (work in progress)
-	while (time100[T1] < duration*60)
-	{
-		displayString(7, "Cleaning ... ");
-		drive(FWD_SPEED);
-		if (readMuxSensor(flTouch) == 1 || readMuxSensor(frTouch) == 1 ||
-			readMuxSensor(sfTouch) || SensorValue[color] == tapeColour)
-		{
-			drive(0);
-			drive(-FWD_SPEED / 2);
-			wait1Msec(2000);
-			smartRotateRobot(90 + rand() % 180);
-		}
-		wait1Msec(100);
-	}
+	motor[motorDrum] = 0;
+	motor[motorSpray] = 0;
+
+	endChime();
 }
