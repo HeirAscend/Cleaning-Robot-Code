@@ -2,10 +2,10 @@
 Varun Chauhan, Ryan Bernstein, Suyu Chen, Jerry Chen
 Version 1.0
 Assumptions: User will follow instructions given during startup, all corners in room are 90 degrees, tape boundaries are always straight lines,
-		 obstacles allow for movement between
+obstacles allow for movement between
 Description: Main code for cleaning robot. On startup, user will be asked to set tape colour, number of edges, and duration. After that, robot will
-		 clean the perimeter of the room based on inputted number of edges. After cleaning edges, robot will used a weighted random turn navigation
-		 algorithm to clean at least 90% of the room within 5 minutes.
+clean the perimeter of the room based on inputted number of edges. After cleaning edges, robot will used a weighted random turn navigation
+algorithm to clean at least 90% of the room within 5 minutes.
 */
 
 #include <UW_sensorMux.c>
