@@ -24,7 +24,7 @@ tMotor motorLeft = motorA, motorRight = motorD, motorSpray = motorC, motorDrum =
 const int FWD_SPEED = 30, TURN_SPEED = 10; // variables for standard speeds for movement and turning
 const float RADIUS = 4;					  // variable for wheel radius
 
-int tapeColour = (int)colorWhite
+int tapeColour = (int)colorWhite;
 int edges = 4;
 float duration = 1.0;
 

@@ -23,6 +23,7 @@ tMotor motorLeft = motorA, motorRight = motorD, motorSpray = motorC, motorDrum =
 
 const int FWD_SPEED = 30, TURN_SPEED = 10; // variables for standard speeds for movement and turning
 const float RADIUS = 4;					  // variable for wheel radius
+const int DRUM_SPRAY_SPEED = 60;
 
 int edges = 4;
 float duration = 1.0;
@@ -132,6 +133,7 @@ bool smartRotateRobot(int angle)
 		}
 	}
 	drive(0);
+	motor[motorDrum] = DRUM_SPRAY_SPEED;
 	return true;
 }
 
@@ -149,6 +151,7 @@ void rotateRobotWide(int angle)
 	else
 		motor[motorLeft] = -1 * TURN_SPEED;
 	while (abs(getGyroDegrees(gyro)) < abs(angle));
+	motor[motorDrum] = DRUM_SPRAY_SPEED;
 	drive(0);
 }
 
@@ -166,6 +169,7 @@ void rotateRobotBackwardsWide(int angle)
 	else
 		motor[motorRight] = TURN_SPEED;
 	while (abs(getGyroDegrees(gyro)) < abs(angle));
+	motor[motorDrum] = DRUM_SPRAY_SPEED;
 	drive(0);
 }
 
@@ -177,7 +181,7 @@ void startup()
 {
 	// inital text
 	displayString(5, "It's roboting time.");
-	wait1Msec(5000);
+	wait1Msec(2000);
 
 	eraseDisplay();
 	edges = 4;
@@ -372,8 +376,8 @@ task main()
 	configureAllSensors();
 	startup();
 
-	motor[motorDrum] = 100;
-	motor[motorSpray] = 100;
+	motor[motorDrum] = DRUM_SPRAY_SPEED;
+	motor[motorSpray] = DRUM_SPRAY_SPEED;
 
 	time100[T1] = 0;
 
