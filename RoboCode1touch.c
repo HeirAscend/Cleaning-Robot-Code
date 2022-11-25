@@ -8,18 +8,15 @@ cleaning edges, robot will used a weighted random turn navigation algorithm to c
 within 5 minutes.
 */
 
-#include <UW_sensorMux.c>
 
 // variables for the motors
 tMotor motorLeft = motorA, motorRight = motorD, motorSpray = motorC, motorDrum = motorB;
 
 #define ultrasonic S1
 #define gyro S2
-#define color S3
-#define mplexer S4
-#define sfTouch msensor_S4_1
-#define flTouch msensor_S4_2
-#define frTouch msensor_S4_3
+#define ltouch S4
+#define rtouch S3
+
 
 const int FWD_SPEED = 30, TURN_SPEED = 10; // variables for standard speeds for movement and turning
 const float RADIUS = 4;					  // variable for wheel radius
@@ -52,22 +49,10 @@ void configureAllSensors()
 	SensorMode[gyro] = modeEV3Gyro_RateAndAngle;
 	wait1Msec(150);
 
-	SensorType[color] = sensorEV3_Color;
-	wait1Msec(100);
-	SensorMode[color] = modeEV3Color_Color;
-	wait1Msec(100);
-
-	// Configure sensor port
-	SensorType[mplexer] = sensorEV3_GenericI2C;
-	wait1Msec(200);
-
-	// configure each channel on the sensor mux
-	if (!initSensorMux(sfTouch, touchStateBump))
-		return;
-	if (!initSensorMux(flTouch, touchStateBump))
-		return;
-	if (!initSensorMux(frTouch, touchStateBump))
-		return;
+  SensorType[ltouch] = sensorEV3_Touch;
+ 	wait1Msec(100);
+ 	SensorType[rtouch] = sensorEV3_Touch;
+ 	wait1Msec(100);
 }
 
 /**
@@ -125,8 +110,7 @@ bool smartRotateRobot(int angle)
 
 	while (abs(getGyroDegrees(gyro)) < abs(angle))
 	{
-		if (readMuxSensor(flTouch) == 1 || readMuxSensor(frTouch) == 1 ||
-			readMuxSensor(sfTouch))
+		if (SensorValue[rtouch] == 1 || SensorValue[ltouch]==1)
 		{
 			drive(0);
 			return false;
@@ -283,7 +267,7 @@ void sweepEdge(int edges)
 		
 		while (cornerType == 0)
 		{
-			if(readMuxSensor(flTouch) == 1 || readMuxSensor(frTouch) == 1){
+			if(SensorValue[rtouch] == 1 || SensorValue[ltouch]==1){
 				cornerType = 1;
 				displayString(11, "inside corner  ");
 			}
@@ -330,8 +314,7 @@ void randomClean()
 	{
 		displayString(7, "Cleaning ... ");
 		drive(FWD_SPEED);
-		if (readMuxSensor(flTouch) == 1 || readMuxSensor(frTouch) == 1 ||
-			readMuxSensor(sfTouch) || rotationCollision)
+		if (SensorValue[rtouch] == 1 || SensorValue[ltouch]==1 || rotationCollision)
 		{
 			drive(0);
 			drive(-FWD_SPEED / 2);

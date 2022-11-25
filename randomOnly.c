@@ -138,42 +138,6 @@ bool smartRotateRobot(int angle)
 }
 
 /**
- * @brief Turn robot using only one motor driving forwards for a wider turn
- * 
- * @param angle angle to turn
- */
-void rotateRobotWide(int angle)
-{
-	resetGyro(gyro);
-	motor[motorDrum] = 0;
-	if (angle > 0)
-		motor[motorRight] = -1 * TURN_SPEED;
-	else
-		motor[motorLeft] = -1 * TURN_SPEED;
-	while (abs(getGyroDegrees(gyro)) < abs(angle));
-	motor[motorDrum] = DRUM_SPRAY_SPEED;
-	drive(0);
-}
-
-/**
- * @brief Turn robot using only one motor driving backward for a wider turn
- * 
- * @param angle angle to turn
- */
-void rotateRobotBackwardsWide(int angle)
-{
-	resetGyro(gyro);
-	motor[motorDrum] = 0;
-	if (angle > 0)
-		motor[motorLeft] = TURN_SPEED;
-	else
-		motor[motorRight] = TURN_SPEED;
-	while (abs(getGyroDegrees(gyro)) < abs(angle));
-	motor[motorDrum] = DRUM_SPRAY_SPEED;
-	drive(0);
-}
-
-/**
  * @brief Startup sequence to receive information from user
  * 
  */
@@ -266,60 +230,6 @@ void startup()
 }
 
 /**
- * @brief Drives robot along an edge and rotates once a corner is detected
- * 
- * @param edges Number of edges
- */
-void sweepEdge(int edges)
-{
-	const int ULTRASONIC_WALL_DIST = 20;
-	bool alongTape = false;
-	int cornerType = 0; // 0 = none, 1 = inside corner, 2 = outside corner
-
-	for (int counter = 0; counter < edges; counter++)
-	{
-		cornerType = 0;
-		drive(FWD_SPEED);
-		
-		while (cornerType == 0)
-		{
-			if(readMuxSensor(flTouch) == 1 || readMuxSensor(frTouch) == 1){
-				cornerType = 1;
-				displayString(11, "inside corner  ");
-			}
-			else if(!alongTape && SensorValue[ultrasonic] > ULTRASONIC_WALL_DIST){
-				cornerType = 2;
-				displayString(11, "outside corner ");
-			}
-
-			displayString(10, "Dist: %d", SensorValue[ultrasonic]);
-			wait1Msec(20);
-		}
-
-		drive(0);
-		eraseDisplay();
-		displayString(10, "corner type %d", cornerType);
-		wait1Msec(1000);
-
-		if(cornerType == 2)
-		{
-			driveDistance(5, FWD_SPEED);
-			rotateRobotWide(-90);
-			driveDistance(10, FWD_SPEED);
-		}
-		else
-		{
-			driveDistance(-15, FWD_SPEED);
-			rotateRobotWide(90);
-			driveDistance(5, FWD_SPEED);
-			rotateRobotBackwardsWide(45);
-			driveDistance(-5, FWD_SPEED);
-			rotateRobotBackwardsWide(-45);
-		}		
-	}
-}
-
-/**
  * @brief Randomly moves around room to clean room
  * 
  */
@@ -381,7 +291,6 @@ task main()
 
 	time100[T1] = 0;
 
-	sweepEdge(edges);
 	randomClean();
 
 	motor[motorDrum] = 0;
