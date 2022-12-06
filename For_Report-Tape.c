@@ -2,12 +2,15 @@
 Varun Chauhan, Ryan Bernstein, Suyu Chen, Jerry Chen
 Version 1.0
 Assumptions: User will follow instructions given during startup, all corners in room 
-are 90 degrees
+are 90 degrees, tape boundaries are always straight lines,
 Description: Main code for cleaning robot. On startup, user will be asked to set 
-number of edges and duration. After that, robot will clean the perimeter of the room 
-based on inputted number of edges. After cleaning edges, robot will used a weighted 
-random turn navigation algorithm to clean at least 90% of the room.
+tape colour, number of edges, and duration. After that, robot will clean the 
+perimeter of the room based on inputted number of edges. After cleaning edges, robot 
+will used a weighted random turn navigation algorithm to clean at least 90% of the 
+room.
 */
+
+#include <UW_sensorMux.c>
 
 // Motor ports
 tMotor motorLeft = motorA;
@@ -18,8 +21,11 @@ tMotor motorDrum = motorB;
 // Sensor ports
 #define ultrasonic S1
 #define gyro S2
-#define ltouch S4
-#define rtouch S3
+#define color S3
+#define mplexer S4
+#define sTouch msensor_S4_1
+#define lTouch msensor_S4_2
+#define rTouch msensor_S4_3
 
 // constants
 #define FWD_SPEED 30	// standard movement speed
@@ -43,10 +49,22 @@ void configureAllSensors()
 	SensorMode[gyro] = modeEV3Gyro_RateAndAngle;
 	wait1Msec(150);
 
-	SensorType[ltouch] = sensorEV3_Touch;
-	wait1Msec(100);
-	SensorType[rtouch] = sensorEV3_Touch;
-	wait1Msec(100);
+	SensorType[color] = sensorEV3_Color;
+	wait1Msec(150);
+	SensorMode[color] = modeEV3Color_Color;
+	wait1Msec(150);
+
+	// Configure sensor port
+	SensorType[mplexer] = sensorEV3_GenericI2C;
+	wait1Msec(200);
+
+	// configure each channel on the sensor mux
+	if (!initSensorMux(sTouch, touchStateBump))
+		return;
+	if (!initSensorMux(lTouch, touchStateBump))
+		return;
+	if (!initSensorMux(rTouch, touchStateBump))
+		return;
 }
 
 /**
@@ -87,7 +105,7 @@ void driveDistance(int distance, int mPower)
  * @param angle target angle to turn in degrees
  * @return true if turn completed, false if collision
  */
-bool smartRotateRobot(int angle)
+bool smartRotateRobot(int angle, int tapeColour)
 {
 	resetGyro(gyro);
 	motor[motorDrum] = 0;
@@ -105,7 +123,8 @@ bool smartRotateRobot(int angle)
 
 	while (abs(getGyroDegrees(gyro)) < abs(angle))
 	{
-		if (SensorValue[rtouch] == 1 || SensorValue[ltouch] == 1)
+		if (readMuxSensor(lTouch) == 1 || readMuxSensor(rTouch) == 1 ||
+			readMuxSensor(sTouch) == 1 || SensorValue[color] == tapeColour)
 		{
 			drive(0);
 			return false;
@@ -160,6 +179,60 @@ void splashScreen()
 {
 	displayString(5, "It's roboting time.");
 	wait1Msec(2000);
+}
+
+/**
+ * @brief Set tape colour for user
+ * @author Varun Chauhan
+ * @return int the tape colour code
+ */
+int getTapeColour()
+{
+	eraseDisplay();
+	int tapeColour = 0;
+
+	// keeps running until user is satisfied with colour
+	while (true)
+	{
+		displayString(5, "Place Robot on coloured tape");
+		displayString(6, "for at least 5 seconds: ");
+		wait1Msec(500);
+
+		// runs until colour sensor detects same colour for 2 seconds (to avoid detecting random colours in set up)
+		while (true)
+		{
+			tapeColour = SensorValue(color);
+			wait1Msec(2000);
+			if (getColorName(color) == tapeColour)
+				break;
+			else
+				tapeColour = (int)(colorRed);
+		}
+
+		displayString(9, "Color %d Chosen!", tapeColour);
+		displayString(10, "Accept or retry?");
+		displayString(12, "Up = Accept, Down = Retry");
+
+		// runs until either up or down is pressed
+		while (!(getButtonPress(buttonUp) || getButtonPress(buttonDown)));
+
+		// breaks loop if up is pressed
+		if (getButtonPress(buttonUp))
+		{
+			while (getButtonPress(buttonUp));
+			eraseDisplay();
+			break;
+		}
+		// continues running if down is pressed
+		else
+		{
+			while (getButtonPress(buttonDown));
+			eraseDisplay();
+		}
+	}
+
+	wait1Msec(100);
+	return tapeColour;
 }
 
 /**
@@ -271,12 +344,14 @@ void waitForStartConfirmation()
  * @brief Drives robot along an edge and rotates once a corner is detected
  * @author Suyu Chen
  * @param edges Number of edges
+ * @param tapeColour Color of border tape
  */
-void sweepEdge(int edges)
+void sweepEdge(int edges, int tapeColour)
 {
 	const int ULTRASONIC_WALL_DIST = 20;
 	bool alongTape = false;
-	int cornerType = 0; // 0 = none, 1 = inside corner, 2 = outside corner
+	int cornerType = 0; // 0 = none, 1 = inside corner, 2 = outside corner,  
+						// 3 = wall to tape
 
 	for (int counter = 0; counter < edges; counter++)
 	{
@@ -285,7 +360,7 @@ void sweepEdge(int edges)
 
 		while (cornerType == 0)
 		{
-			if (SensorValue[rtouch] == 1 || SensorValue[ltouch] == 1)
+			if (readMuxSensor(lTouch) == 1 || readMuxSensor(rTouch) == 1)
 			{
 				cornerType = 1;
 				displayString(11, "inside corner  ");
@@ -294,6 +369,11 @@ void sweepEdge(int edges)
 			{
 				cornerType = 2;
 				displayString(11, "outside corner ");
+			}
+			else if (SensorValue[color] == tapeColour)
+			{
+				cornerType = 3;
+				displayString(11, "tape corner    ");
 			}
 
 			displayString(10, "Dist: %d", SensorValue[ultrasonic]);
@@ -320,6 +400,11 @@ void sweepEdge(int edges)
 			driveDistance(-5, FWD_SPEED);
 			rotateRobotBackwardsWide(-45);
 		}
+		
+		if(cornerType == 3)	
+			alongTape = true;
+		else
+			alongTape = false;
 	}
 }
 
@@ -327,19 +412,20 @@ void sweepEdge(int edges)
  * @brief Randomly moves around room to clean room
  * @author Ryan Bernstein
  */
-void randomClean(float duration)
+void randomClean(float duration, int tapeColour)
 {
 	bool rotationCollision = false;
 	while (time100[T1] < duration * 600)
 	{
 		displayString(7, "Cleaning ... ");
 		drive(FWD_SPEED);
-		if (SensorValue[rtouch] == 1 || SensorValue[ltouch] == 1 || rotationCollision)
+		if (readMuxSensor(rTouch) == 1 || readMuxSensor(lTouch) == 1 ||
+			readMuxSensor(sTouch) == 1 || rotationCollision)
 		{
 			drive(0);
 			drive(-FWD_SPEED / 2);
 			wait1Msec(2000);
-			rotationCollision = !smartRotateRobot(90 + rand() % 180);
+			rotationCollision = !smartRotateRobot(90 + rand() % 180, tapeColour);
 		}
 		wait1Msec(100);
 	}
@@ -388,9 +474,11 @@ task main()
 {
 	int edges = 4;
 	float duration = 1.0;
+	int tapeColour = 0;
 
 	configureAllSensors();
 	splashScreen();
+	tapeColour = getTapeColour();
 	edges = getEdges();
 	duration = getDuration();
 	waitForStartConfirmation();
@@ -400,8 +488,8 @@ task main()
 
 	time100[T1] = 0;
 
-	sweepEdge(edges);
-	randomClean(duration);
+	sweepEdge(edges, tapeColour);
+	randomClean(duration, tapeColour);
 
 	motor[motorDrum] = 0;
 	motor[motorSpray] = 0;

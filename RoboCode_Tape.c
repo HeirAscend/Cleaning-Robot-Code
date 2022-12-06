@@ -335,11 +335,12 @@ void sweepEdge(int edges, int tapeColour)
 				cornerType = 1;
 				displayString(11, "inside corner  ");
 			}
-			else if(!alongTape && SensorValue[ultrasonic] > ULTRASONIC_WALL_DIST){
+			else if (!alongTape && SensorValue[ultrasonic] > ULTRASONIC_WALL_DIST)
+			{
 				cornerType = 2;
 				displayString(11, "outside corner ");
 			}
-			else if(SensorValue[color] == tapeColour){
+			else if (SensorValue[color] == tapeColour){
 				cornerType = 3;
 				displayString(11, "tape corner    ");
 			}
