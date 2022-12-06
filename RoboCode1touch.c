@@ -1,26 +1,34 @@
 /*
 Varun Chauhan, Ryan Bernstein, Suyu Chen, Jerry Chen
-Version 1.0
+Version 4.0
 Assumptions: User will follow instructions given during startup, all corners in room are 90 degrees
 Description: Main code for cleaning robot. On startup, user will be asked to set number of edges, and 
 duration. After that, robot will clean the perimeter of the room based on inputted number of edges. After 
 cleaning edges, robot will used a weighted random turn navigation algorithm to clean at least 90% of the room
-within 5 minutes.
+within 5 minutes. This code is the final code used for the demonstration. The capabilities are limited
+compared to the previous version because the multiplexer was not working, which reduced the number of ports.
 */
 
 
 // variables for the motors
 tMotor motorLeft = motorA, motorRight = motorD, motorSpray = motorC, motorDrum = motorB;
 
+// defines the sensor ports
 #define ultrasonic S1
 #define gyro S2
 #define ltouch S4
 #define rtouch S3
 
-const int FWD_SPEED = 30, TURN_SPEED = 10; // variables for standard speeds for movement and turning
-const float RADIUS = 4;					  // variable for wheel radius
+// variables for standard speeds for movement and turning
+const int FWD_SPEED = 30, TURN_SPEED = 10;
+
+// variable for wheel radius
+const float RADIUS = 4;
+
+// variable for spray speed
 const int DRUM_SPRAY_SPEED = 60;
 
+// standard variables needed for setup
 int edges = 4;
 float duration = 1.0;
 
@@ -40,7 +48,7 @@ void configureAllSensors()
 	SensorMode[gyro] = modeEV3Gyro_RateAndAngle;
 	wait1Msec(150);
 
-  SensorType[ltouch] = sensorEV3_Touch;
+  	SensorType[ltouch] = sensorEV3_Touch;
  	wait1Msec(100);
  	SensorType[rtouch] = sensorEV3_Touch;
  	wait1Msec(100);
@@ -53,7 +61,8 @@ void configureAllSensors()
  */
 void drive(int mPower)
 {
-	motor[motorLeft] = motor[motorRight] = -mPower; // negative because motor orientation is reversed on robot
+	// negative because motor orientation is reversed on robot
+	motor[motorLeft] = motor[motorRight] = -mPower; 
 }
 
 /**
@@ -68,7 +77,7 @@ void driveDistance(int distance, int mPower)
 	nMotorEncoder[motorLeft] = 0;
 	
 	if (distance > 0)
-		drive(mPower);   // negative because motor orientation is reversed on robot
+		drive(mPower);
 	else
 		drive(-mPower);
 
@@ -101,7 +110,8 @@ bool smartRotateRobot(int angle)
 
 	while (abs(getGyroDegrees(gyro)) < abs(angle))
 	{
-		if (SensorValue[rtouch] == 1 || SensorValue[ltouch]==1)
+		// checks if either touch sensor gets engaged
+		if (SensorValue[rtouch] == 1 || SensorValue[ltouch] == 1)
 		{
 			drive(0);
 			return false;
@@ -305,7 +315,7 @@ void randomClean()
 	{
 		displayString(7, "Cleaning ... ");
 		drive(FWD_SPEED);
-		if (SensorValue[rtouch] == 1 || SensorValue[ltouch]==1 || rotationCollision)
+		if (SensorValue[rtouch] == 1 || SensorValue[ltouch] == 1 || rotationCollision)
 		{
 			drive(0);
 			drive(-FWD_SPEED / 2);
