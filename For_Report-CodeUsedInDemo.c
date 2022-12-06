@@ -2,12 +2,11 @@
 Varun Chauhan, Ryan Bernstein, Suyu Chen, Jerry Chen
 Version 1.0
 Assumptions: User will follow instructions given during startup, all corners in room are 90 degrees
-Description: Main code for cleaning robot. On startup, user will be asked to set number of edges, and 
-duration. After that, robot will clean the perimeter of the room based on inputted number of edges. After 
+Description: Main code for cleaning robot. On startup, user will be asked to set number of edges, and
+duration. After that, robot will clean the perimeter of the room based on inputted number of edges. After
 cleaning edges, robot will used a weighted random turn navigation algorithm to clean at least 90% of the room
 within 5 minutes.
 */
-
 
 // variables for the motors
 tMotor motorLeft = motorA, motorRight = motorD, motorSpray = motorC, motorDrum = motorB;
@@ -18,7 +17,7 @@ tMotor motorLeft = motorA, motorRight = motorD, motorSpray = motorC, motorDrum =
 #define rtouch S3
 
 const int FWD_SPEED = 30, TURN_SPEED = 10; // variables for standard speeds for movement and turning
-const float RADIUS = 4;					  // variable for wheel radius
+const float RADIUS = 4;					   // variable for wheel radius
 const int DRUM_SPRAY_SPEED = 60;
 
 int edges = 4;
@@ -26,7 +25,7 @@ float duration = 1.0;
 
 /**
  * @brief Configures all sensors
- * 
+ *
  */
 void configureAllSensors()
 {
@@ -40,15 +39,15 @@ void configureAllSensors()
 	SensorMode[gyro] = modeEV3Gyro_RateAndAngle;
 	wait1Msec(150);
 
-  SensorType[ltouch] = sensorEV3_Touch;
- 	wait1Msec(100);
- 	SensorType[rtouch] = sensorEV3_Touch;
- 	wait1Msec(100);
+	SensorType[ltouch] = sensorEV3_Touch;
+	wait1Msec(100);
+	SensorType[rtouch] = sensorEV3_Touch;
+	wait1Msec(100);
 }
 
 /**
  * @brief Drive robot at specified power/direction
- * 
+ *
  * @param mPower motor power (-100 to 100) negative for driving in reverse
  */
 void drive(int mPower)
@@ -58,7 +57,7 @@ void drive(int mPower)
 
 /**
  * @brief Drive robot a specified distance
- * 
+ *
  * @param distance distance for robot to drive in cm (negative for backwards)
  * @param mPower motor power (positive number 0-100)
  */
@@ -66,13 +65,14 @@ void driveDistance(int distance, int mPower)
 {
 	const float CM_TO_DEG = 180 / (RADIUS * PI);
 	nMotorEncoder[motorLeft] = 0;
-	
+
 	if (distance > 0)
-		drive(mPower);   // negative because motor orientation is reversed on robot
+		drive(mPower); // negative because motor orientation is reversed on robot
 	else
 		drive(-mPower);
 
-	while (abs(nMotorEncoder[motorLeft]) < abs(distance * CM_TO_DEG));
+	while (abs(nMotorEncoder[motorLeft]) < abs(distance * CM_TO_DEG))
+		;
 
 	drive(0);
 }
@@ -80,7 +80,7 @@ void driveDistance(int distance, int mPower)
 /**
  * @brief Rotate robot with collision detection
  *
- * @param angle angle to turn
+ * @param angle angle to turn in degrees
  * @return true if turn completed, false if collision
  */
 bool smartRotateRobot(int angle)
@@ -101,7 +101,7 @@ bool smartRotateRobot(int angle)
 
 	while (abs(getGyroDegrees(gyro)) < abs(angle))
 	{
-		if (SensorValue[rtouch] == 1 || SensorValue[ltouch]==1)
+		if (SensorValue[rtouch] == 1 || SensorValue[ltouch] == 1)
 		{
 			drive(0);
 			return false;
@@ -114,8 +114,8 @@ bool smartRotateRobot(int angle)
 
 /**
  * @brief Turn robot using only one motor driving forwards for a wider turn
- * 
- * @param angle angle to turn
+ *
+ * @param angle angle to turn in degrees
  */
 void rotateRobotWide(int angle)
 {
@@ -125,14 +125,15 @@ void rotateRobotWide(int angle)
 		motor[motorRight] = -1 * TURN_SPEED;
 	else
 		motor[motorLeft] = -1 * TURN_SPEED;
-	while (abs(getGyroDegrees(gyro)) < abs(angle));
+	while (abs(getGyroDegrees(gyro)) < abs(angle))
+		;
 	motor[motorDrum] = DRUM_SPRAY_SPEED;
 	drive(0);
 }
 
 /**
  * @brief Turn robot using only one motor driving backward for a wider turn
- * 
+ *
  * @param angle angle to turn
  */
 void rotateRobotBackwardsWide(int angle)
@@ -143,14 +144,15 @@ void rotateRobotBackwardsWide(int angle)
 		motor[motorLeft] = TURN_SPEED;
 	else
 		motor[motorRight] = TURN_SPEED;
-	while (abs(getGyroDegrees(gyro)) < abs(angle));
+	while (abs(getGyroDegrees(gyro)) < abs(angle))
+		;
 	motor[motorDrum] = DRUM_SPRAY_SPEED;
 	drive(0);
 }
 
 /**
  * @brief Startup sequence to receive information from user
- * 
+ *
  */
 void startup()
 {
@@ -173,22 +175,26 @@ void startup()
 		displayString(10, "Number of edges: %d", edges);
 
 		// waits until either button is pressed
-		while (!(getButtonPress(buttonUp) || getButtonPress(buttonDown) || getButtonPress(buttonEnter)));
+		while (!(getButtonPress(buttonUp) || getButtonPress(buttonDown) || getButtonPress(buttonEnter)))
+			;
 
 		if (getButtonPress(buttonUp)) // increment if up is pressed
 		{
-			while (getButtonPress(buttonUp));
+			while (getButtonPress(buttonUp))
+				;
 			edges++;
 		}
 		else // decrement if down is pressed
 		{
-			while (getButtonPress(buttonDown));
+			while (getButtonPress(buttonDown))
+				;
 			if (edges > 4)
 				edges--;
 		}
 	}
 
-	while (getButtonPress(buttonEnter));
+	while (getButtonPress(buttonEnter))
+		;
 	eraseDisplay();
 	wait1Msec(100);
 	duration = 0.0;
@@ -205,26 +211,30 @@ void startup()
 		displayString(10, "Duration: %d mins", (int)duration);
 
 		// waits until either button is pressed
-		while (!(getButtonPress(buttonUp) || getButtonPress(buttonDown) || getButtonPress(buttonEnter)));
+		while (!(getButtonPress(buttonUp) || getButtonPress(buttonDown) || getButtonPress(buttonEnter)))
+			;
 
 		// increments if up is pressed
 		if (getButtonPress(buttonUp))
 		{
-			while (getButtonPress(buttonUp));
+			while (getButtonPress(buttonUp))
+				;
 			duration++;
 		}
 
 		// decrements if down is pressed
 		else
 		{
-			while (getButtonPress(buttonDown));
+			while (getButtonPress(buttonDown))
+				;
 			if (duration > 0)
 				duration--;
 		}
 	}
 
 	// wait until enter is released then erase display
-	while (getButtonPress(buttonEnter));
+	while (getButtonPress(buttonEnter))
+		;
 	eraseDisplay();
 	wait1Msec(100);
 
@@ -234,15 +244,17 @@ void startup()
 	displayString(8, "enter to start.");
 
 	wait1Msec(100);
-	while (!getButtonPress(buttonEnter));
-	while (getButtonPress(buttonEnter));
+	while (!getButtonPress(buttonEnter))
+		;
+	while (getButtonPress(buttonEnter))
+		;
 
 	configureAllSensors();
 }
 
 /**
  * @brief Drives robot along an edge and rotates once a corner is detected
- * 
+ *
  * @param edges Number of edges
  */
 void sweepEdge(int edges)
@@ -255,14 +267,16 @@ void sweepEdge(int edges)
 	{
 		cornerType = 0;
 		drive(FWD_SPEED);
-		
+
 		while (cornerType == 0)
 		{
-			if(SensorValue[rtouch] == 1 || SensorValue[ltouch]==1){
+			if (SensorValue[rtouch] == 1 || SensorValue[ltouch] == 1)
+			{
 				cornerType = 1;
 				displayString(11, "inside corner  ");
 			}
-			else if(!alongTape && SensorValue[ultrasonic] > ULTRASONIC_WALL_DIST){
+			else if (!alongTape && SensorValue[ultrasonic] > ULTRASONIC_WALL_DIST)
+			{
 				cornerType = 2;
 				displayString(11, "outside corner ");
 			}
@@ -276,7 +290,7 @@ void sweepEdge(int edges)
 		displayString(10, "corner type %d", cornerType);
 		wait1Msec(1000);
 
-		if(cornerType == 2)
+		if (cornerType == 2)
 		{
 			driveDistance(5, FWD_SPEED);
 			rotateRobotWide(-90);
@@ -290,13 +304,13 @@ void sweepEdge(int edges)
 			rotateRobotBackwardsWide(45);
 			driveDistance(-5, FWD_SPEED);
 			rotateRobotBackwardsWide(-45);
-		}		
+		}
 	}
 }
 
 /**
  * @brief Randomly moves around room to clean room
- * 
+ *
  */
 void randomClean()
 {
@@ -305,7 +319,7 @@ void randomClean()
 	{
 		displayString(7, "Cleaning ... ");
 		drive(FWD_SPEED);
-		if (SensorValue[rtouch] == 1 || SensorValue[ltouch]==1 || rotationCollision)
+		if (SensorValue[rtouch] == 1 || SensorValue[ltouch] == 1 || rotationCollision)
 		{
 			drive(0);
 			drive(-FWD_SPEED / 2);
@@ -326,7 +340,7 @@ void randomClean()
 
 /**
  * @brief Play end chime
- * 
+ *
  */
 void endChime()
 {
@@ -351,7 +365,7 @@ void endChime()
 
 /**
  * @brief Main program
- * 
+ *
  */
 task main()
 {
