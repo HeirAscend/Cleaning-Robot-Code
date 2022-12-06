@@ -1,11 +1,12 @@
 /*
 Varun Chauhan, Ryan Bernstein, Suyu Chen, Jerry Chen
 Version 1.0
-Assumptions: User will follow instructions given during startup, all corners in room are 90 degrees
-Description: Main code for cleaning robot. On startup, user will be asked to set number of edges, and
-duration. After that, robot will clean the perimeter of the room based on inputted number of edges. After
-cleaning edges, robot will used a weighted random turn navigation algorithm to clean at least 90% of the room
-within 5 minutes.
+Assumptions: User will follow instructions given during startup, all corners in room 
+are 90 degrees
+Description: Main code for cleaning robot. On startup, user will be asked to set 
+number of edges and duration. After that, robot will clean the perimeter of the room 
+based on inputted number of edges. After cleaning edges, robot will used a weighted 
+random turn navigation algorithm to clean at least 90% of the room.
 */
 
 // Motor ports
@@ -55,7 +56,8 @@ void configureAllSensors()
  */
 void drive(int mPower)
 {
-	motor[motorLeft] = motor[motorRight] = -mPower; // negative because motor orientation is reversed on robot
+	// negative because motor orientation is reversed on robot
+	motor[motorLeft] = motor[motorRight] = -mPower; 
 }
 
 /**
@@ -68,21 +70,20 @@ void driveDistance(int distance, int mPower)
 {
 	const float CM_TO_DEG = 180 / (RADIUS * PI);
 	nMotorEncoder[motorLeft] = 0;
-
+	
 	if (distance > 0)
-		drive(mPower); // negative because motor orientation is reversed on robot
+		drive(mPower);
 	else
 		drive(-mPower);
 
-	while (abs(nMotorEncoder[motorLeft]) < abs(distance * CM_TO_DEG))
-		;
+	while (abs(nMotorEncoder[motorLeft]) < abs(distance * CM_TO_DEG));
 
 	drive(0);
 }
 
 /**
  * @brief Rotate robot with collision detection
- * 
+ * @author Ryan Bernstein
  * @param angle target angle to turn in degrees
  * @return true if turn completed, false if collision
  */
@@ -117,7 +118,7 @@ bool smartRotateRobot(int angle)
 
 /**
  * @brief Turn robot using only one motor driving forwards for a wider turn
- *
+ * @author Ryan Bernstein
  * @param angle angle to turn in degrees
  */
 void rotateRobotWide(int angle)
@@ -135,7 +136,7 @@ void rotateRobotWide(int angle)
 
 /**
  * @brief Turn robot using only one motor driving backward for a wider turn
- *
+ * @author Ryan Bernstein
  * @param angle angle to turn
  */
 void rotateRobotBackwardsWide(int angle)
@@ -182,7 +183,8 @@ int getEdges()
 		displayString(10, "Number of edges: %d", edges);
 
 		// waits until either button is pressed
-		while (!(getButtonPress(buttonUp) || getButtonPress(buttonDown) || getButtonPress(buttonEnter)));
+		while (!(getButtonPress(buttonUp) || getButtonPress(buttonDown) ||
+				 getButtonPress(buttonEnter)));
 
 		if (getButtonPress(buttonUp)) // increment if up is pressed
 		{
@@ -210,7 +212,7 @@ int getEdges()
 float getDuration()
 {
 	eraseDisplay();
-	duration = 0.0;
+	float duration = 0.0;
 
 	// waits until enter is pressed
 	while (!getButtonPress(buttonEnter))
@@ -224,8 +226,8 @@ float getDuration()
 		displayString(10, "Duration: %d mins", (int)duration);
 
 		// waits until either button is pressed
-		while (!(getButtonPress(buttonUp) || getButtonPress(buttonDown) || getButtonPress(buttonEnter)))
-			;
+		while (!(getButtonPress(buttonUp) || getButtonPress(buttonDown) ||
+				 getButtonPress(buttonEnter)));
 
 		// increments if up is pressed
 		if (getButtonPress(buttonUp))
@@ -247,10 +249,12 @@ float getDuration()
 	while (getButtonPress(buttonEnter));
 	eraseDisplay();
 	wait1Msec(100);
+	return duration;
 }
 
 /**
- * @brief Display instructions to user and waits for user to press enter to start the robot
+ * @brief Display instructions to user and waits for user to press enter to start the
+ *  	  robot
  * @author Varun Chauhan
  */
 void waitForStartConfirmation()
@@ -361,8 +365,11 @@ void endChime()
 	int wait = 200;
 
 	const int NUM_NOTES = 20;
-	float music[NUM_NOTES] = {NOTE_G, NOTE_G, NOTE_G, NOTE_G, NOTE_G, NOTE_G, NOTE_A, NOTE_G, NOTE_G, NOTE_F, NOTE_F, NOTE_F, NOTE_F, NOTE_E, NOTE_E, NOTE_E, NOTE_E, NOTE_E, NOTE_D, NOTE_D};
-	int beatLengths[NUM_NOTES] = {1, 2, 1, 1, 2, 3, 2, 1, 3, 8, 1, 1, 2, 1, 8, 1, 1, 2, 1, 1};
+	float music[NUM_NOTES] = {NOTE_G, NOTE_G, NOTE_G, NOTE_G, NOTE_G, NOTE_G, NOTE_A,
+							  NOTE_G, NOTE_G, NOTE_F, NOTE_F, NOTE_F, NOTE_F, NOTE_E, 
+							  NOTE_E, NOTE_E, NOTE_E, NOTE_E, NOTE_D, NOTE_D};
+	int beatLengths[NUM_NOTES] = {1, 2, 1, 1, 2, 3, 2, 1, 3, 8, 1, 1, 2, 1, 8, 1, 1,
+								  2, 1, 1};
 
 	for (int note = 0; note < NUM_NOTES; note++)
 	{
