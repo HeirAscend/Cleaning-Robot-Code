@@ -20,9 +20,11 @@ tMotor motorDrum = motorB;
 #define ltouch S4
 #define rtouch S3
 
-const int FWD_SPEED = 30, TURN_SPEED = 10; // variables for standard speeds for movement and turning
-const float RADIUS = 4;					   // variable for wheel radius
-const int DRUM_SPRAY_SPEED = 60;
+// constants
+#define FWD_SPEED 30	// standard movement speed
+#define TURN_SPEED 10 	// standard turn speed
+#define RADIUS 4		//  wheel radius
+#define DRUM_SPRAY_SPEED 60
 
 /**
  * @brief Configures all sensors
@@ -321,7 +323,7 @@ void sweepEdge(int edges)
  * @brief Randomly moves around room to clean room
  * @author Ryan Bernstein
  */
-void randomClean()
+void randomClean(float duration)
 {
 	bool rotationCollision = false;
 	while (time100[T1] < duration * 600)
@@ -382,7 +384,9 @@ task main()
 
 	configureAllSensors();
 	splashScreen();
-	getEdges
+	edges = getEdges();
+	duration = getDuration();
+	waitForStartConfirmation();
 
 	motor[motorDrum] = DRUM_SPRAY_SPEED;
 	motor[motorSpray] = DRUM_SPRAY_SPEED;
@@ -390,7 +394,7 @@ task main()
 	time100[T1] = 0;
 
 	sweepEdge(edges);
-	randomClean();
+	randomClean(duration);
 
 	motor[motorDrum] = 0;
 	motor[motorSpray] = 0;
