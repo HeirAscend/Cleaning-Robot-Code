@@ -80,7 +80,7 @@ void driveDistance(int distance, int mPower)
 
 /**
  * @brief Rotate robot with collision detection
- *
+ * 
  * @param angle target angle to turn in degrees
  * @return true if turn completed, false if collision
  */
@@ -151,7 +151,7 @@ void rotateRobotBackwardsWide(int angle)
 
 /**
  * @brief Display the splash screen
- * 
+ * @author Varun Chauhan
  */
 void splashScreen()
 {
@@ -161,7 +161,7 @@ void splashScreen()
 
 /**
  * @brief Get # of edges in room from user
- * 
+ * @author Varun Chauhan
  */
 int getEdges()
 {
@@ -203,7 +203,7 @@ int getEdges()
 
 /**
  * @brief Get cleaning duration from user
- * 
+ * @author Varun Chauhan
  */
 float getDuration()
 {
@@ -249,7 +249,7 @@ float getDuration()
 
 /**
  * @brief Display instructions to user and waits for user to press enter to start the robot
- * 
+ * @author Varun Chauhan
  */
 void waitForStartConfirmation()
 {
@@ -263,7 +263,7 @@ void waitForStartConfirmation()
 
 /**
  * @brief Drives robot along an edge and rotates once a corner is detected
- *
+ * @author Suyu Chen
  * @param edges Number of edges
  */
 void sweepEdge(int edges)
@@ -319,7 +319,7 @@ void sweepEdge(int edges)
 
 /**
  * @brief Randomly moves around room to clean room
- *
+ * @author Ryan Bernstein
  */
 void randomClean()
 {
@@ -341,7 +341,7 @@ void randomClean()
 
 /**
  * @brief Play end chime
- *
+ * @author Jerry Chen
  */
 void endChime()
 {
