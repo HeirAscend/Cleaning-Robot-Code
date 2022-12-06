@@ -482,6 +482,7 @@ task main()
 	edges = getEdges();
 	duration = getDuration();
 	waitForStartConfirmation();
+	configureAllSensors();
 
 	motor[motorDrum] = DRUM_SPRAY_SPEED;
 	motor[motorSpray] = DRUM_SPRAY_SPEED;
