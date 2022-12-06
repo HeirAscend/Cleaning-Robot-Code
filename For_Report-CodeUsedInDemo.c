@@ -381,7 +381,8 @@ task main()
 	float duration = 1.0;
 
 	configureAllSensors();
-	startup();
+	splashScreen();
+	getEdges
 
 	motor[motorDrum] = DRUM_SPRAY_SPEED;
 	motor[motorSpray] = DRUM_SPRAY_SPEED;
