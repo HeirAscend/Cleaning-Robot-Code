@@ -8,9 +8,13 @@ cleaning edges, robot will used a weighted random turn navigation algorithm to c
 within 5 minutes.
 */
 
-// variables for the motors
-tMotor motorLeft = motorA, motorRight = motorD, motorSpray = motorC, motorDrum = motorB;
+// Motor ports
+tMotor motorLeft = motorA;
+tMotor motorRight = motorD;
+tMotor motorSpray = motorC;
+tMotor motorDrum = motorB;
 
+// Sensor ports
 #define ultrasonic S1
 #define gyro S2
 #define ltouch S4
@@ -19,9 +23,6 @@ tMotor motorLeft = motorA, motorRight = motorD, motorSpray = motorC, motorDrum =
 const int FWD_SPEED = 30, TURN_SPEED = 10; // variables for standard speeds for movement and turning
 const float RADIUS = 4;					   // variable for wheel radius
 const int DRUM_SPRAY_SPEED = 60;
-
-int edges = 4;
-float duration = 1.0;
 
 /**
  * @brief Configures all sensors
@@ -80,7 +81,7 @@ void driveDistance(int distance, int mPower)
 /**
  * @brief Rotate robot with collision detection
  *
- * @param angle angle to turn in degrees
+ * @param angle target angle to turn in degrees
  * @return true if turn completed, false if collision
  */
 bool smartRotateRobot(int angle)
@@ -125,8 +126,7 @@ void rotateRobotWide(int angle)
 		motor[motorRight] = -1 * TURN_SPEED;
 	else
 		motor[motorLeft] = -1 * TURN_SPEED;
-	while (abs(getGyroDegrees(gyro)) < abs(angle))
-		;
+	while (abs(getGyroDegrees(gyro)) < abs(angle));
 	motor[motorDrum] = DRUM_SPRAY_SPEED;
 	drive(0);
 }
@@ -144,24 +144,29 @@ void rotateRobotBackwardsWide(int angle)
 		motor[motorLeft] = TURN_SPEED;
 	else
 		motor[motorRight] = TURN_SPEED;
-	while (abs(getGyroDegrees(gyro)) < abs(angle))
-		;
+	while (abs(getGyroDegrees(gyro)) < abs(angle));
 	motor[motorDrum] = DRUM_SPRAY_SPEED;
 	drive(0);
 }
 
 /**
- * @brief Startup sequence to receive information from user
- *
+ * @brief Display the splash screen
+ * 
  */
-void startup()
+void splashScreen()
 {
-	// inital text
 	displayString(5, "It's roboting time.");
 	wait1Msec(2000);
+}
 
+/**
+ * @brief Get # of edges in room from user
+ * 
+ */
+int getEdges()
+{
 	eraseDisplay();
-	edges = 4;
+	int edges = 4;
 
 	// waits until enter is pressed
 	while (!getButtonPress(buttonEnter))
@@ -175,28 +180,34 @@ void startup()
 		displayString(10, "Number of edges: %d", edges);
 
 		// waits until either button is pressed
-		while (!(getButtonPress(buttonUp) || getButtonPress(buttonDown) || getButtonPress(buttonEnter)))
-			;
+		while (!(getButtonPress(buttonUp) || getButtonPress(buttonDown) || getButtonPress(buttonEnter)));
 
 		if (getButtonPress(buttonUp)) // increment if up is pressed
 		{
-			while (getButtonPress(buttonUp))
-				;
+			while (getButtonPress(buttonUp));
 			edges++;
 		}
 		else // decrement if down is pressed
 		{
-			while (getButtonPress(buttonDown))
-				;
+			while (getButtonPress(buttonDown));
 			if (edges > 4)
 				edges--;
 		}
 	}
 
-	while (getButtonPress(buttonEnter))
-		;
+	while (getButtonPress(buttonEnter));
 	eraseDisplay();
 	wait1Msec(100);
+	return edges;
+}
+
+/**
+ * @brief Get cleaning duration from user
+ * 
+ */
+float getDuration()
+{
+	eraseDisplay();
 	duration = 0.0;
 
 	// waits until enter is pressed
@@ -217,39 +228,37 @@ void startup()
 		// increments if up is pressed
 		if (getButtonPress(buttonUp))
 		{
-			while (getButtonPress(buttonUp))
-				;
+			while (getButtonPress(buttonUp));
 			duration++;
 		}
 
 		// decrements if down is pressed
 		else
 		{
-			while (getButtonPress(buttonDown))
-				;
+			while (getButtonPress(buttonDown));
 			if (duration > 0)
 				duration--;
 		}
 	}
 
 	// wait until enter is released then erase display
-	while (getButtonPress(buttonEnter))
-		;
+	while (getButtonPress(buttonEnter));
 	eraseDisplay();
 	wait1Msec(100);
+}
 
-	// Waits for enter button to be pressed then begins cleaning
+/**
+ * @brief Display instructions to user and waits for user to press enter to start the robot
+ * 
+ */
+void waitForStartConfirmation()
+{
 	displayString(6, "All configured! Place Robot at");
 	displayString(7, "starting position and press");
 	displayString(8, "enter to start.");
-
 	wait1Msec(100);
-	while (!getButtonPress(buttonEnter))
-		;
-	while (getButtonPress(buttonEnter))
-		;
-
-	configureAllSensors();
+	while (!getButtonPress(buttonEnter));
+	while (getButtonPress(buttonEnter));
 }
 
 /**
@@ -330,20 +339,19 @@ void randomClean()
 	}
 }
 
-// defines for playing sounds
-#define NOTE_C 554.37
-#define NOTE_D 587.33
-#define NOTE_E 659.25
-#define NOTE_F 739.99
-#define NOTE_G 783.99
-#define NOTE_A 880
-
 /**
  * @brief Play end chime
  *
  */
 void endChime()
 {
+	const float NOTE_C = 554.37;
+	const float NOTE_D = 587.33;
+	const float NOTE_E = 659.25;
+	const float NOTE_F = 739.99;
+	const float NOTE_G = 783.99;
+	const float NOTE_A = 880;
+	
 	eraseDisplay();
 	displayString(7, "Roboting Complete");
 
@@ -369,6 +377,9 @@ void endChime()
  */
 task main()
 {
+	int edges = 4;
+	float duration = 1.0;
+
 	configureAllSensors();
 	startup();
 
